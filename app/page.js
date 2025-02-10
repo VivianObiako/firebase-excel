@@ -1,27 +1,63 @@
 "use client";
 
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, limit, startAfter, endBefore } from "firebase/firestore";
 import { useState, useEffect } from "react";
 import { database } from "../firebase.js";
 
 export default function Home() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastDoc, setLastDoc] = useState(null);
+  const [firstDoc, setFirstDoc] = useState(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  const fetchData = async (direction) => {
+    setLoading(true);
+    let dataRef = collection(database, "otpcodes");
+    let q;
+
+    if (direction === "next") {
+      q = query(dataRef, orderBy("otp"), startAfter(lastDoc), limit(pageSize));
+    } else if (direction === "prev") {
+      q = query(dataRef, orderBy("otp"), endBefore(firstDoc), limit(pageSize));
+    } else {
+      q = query(dataRef, orderBy("otp"), limit(pageSize));
+    }
+
+    const snapshot = await getDocs(q);
+    const fetchedData = snapshot.docs.map((doc) => doc.data());
+
+    setData(fetchedData);
+    setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+    setFirstDoc(snapshot.docs[0]);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const dataRef = collection(database, "otpcodes");
-      const snapshot = await getDocs(dataRef);
-      const fetchedData = snapshot.docs.map((doc) => doc.data());
-      setData(fetchedData);
-      setLoading(false);
-    };
-
     fetchData();
   }, []);
 
+  const handleNextPage = () => {
+    if (page > 999) {
+      return;
+    }
+
+    setPage(page + 1);
+    fetchData("next");
+  };
+
+  const handlePrevPage = () => {
+    if (page === 1) {
+      return;
+    }
+
+    setPage(page - 1);
+    fetchData("prev");
+  };
+
   return (
-    <div className="grid items-center justify-items-center min-h-screen p-8 pb-20 gap-4 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className="grid items-center justify-items-center p-8 pb-20 gap-4 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <div className="flex justify-between items-center w-full">
         <h1 className="font-bold">TOUR GUIDING OTP CODES</h1>
         <div className="ml-3">
@@ -121,22 +157,26 @@ export default function Home() {
 
         <div className="flex justify-between items-center px-4 py-3">
           <div className="text-sm text-slate-500">
-            Showing <b>1-5</b> of 45
+            Showing{" "}
+            <b>
+              {(page - 1) * pageSize + 1}-{page * pageSize}
+            </b>{" "}
+            of 10000 entries
           </div>
           <div className="flex space-x-1">
-            <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
+            <button onClick={handlePrevPage} className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
               Prev
             </button>
+            {page - 1 > 0 && <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
+              {page - 1}
+            </button>}
             <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-white bg-slate-800 border border-slate-800 rounded hover:bg-slate-600 hover:border-slate-600 transition duration-200 ease">
-              1
+              {page}
             </button>
-            <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
-              2
-            </button>
-            <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
-              3
-            </button>
-            <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
+            {page + 1 < 1000 && <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
+              {page + 1}
+            </button>}
+            <button onClick={handleNextPage} className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
               Next
             </button>
           </div>
