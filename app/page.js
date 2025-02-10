@@ -1,6 +1,14 @@
 "use client";
 
-import { collection, getDocs, query, orderBy, limit, startAfter, endBefore } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+  startAfter,
+  endBefore,
+} from "firebase/firestore";
 import { useState, useEffect } from "react";
 import { database } from "../firebase.js";
 
@@ -17,9 +25,9 @@ export default function Home() {
     let dataRef = collection(database, "otpcodes");
     let q;
 
-    if (direction === "next") {
+    if (direction === "next" && lastDoc) {
       q = query(dataRef, orderBy("otp"), startAfter(lastDoc), limit(pageSize));
-    } else if (direction === "prev") {
+    } else if (direction === "prev" && firstDoc) {
       q = query(dataRef, orderBy("otp"), endBefore(firstDoc), limit(pageSize));
     } else {
       q = query(dataRef, orderBy("otp"), limit(pageSize));
@@ -32,6 +40,12 @@ export default function Home() {
     setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
     setFirstDoc(snapshot.docs[0]);
     setLoading(false);
+  };
+
+  const formatDate = (milliseconds) => {
+    const date = new Date(milliseconds);
+    const options = { year: "numeric", month: "short", day: "numeric" };
+    return date.toLocaleDateString("en-US", options);
   };
 
   useEffect(() => {
@@ -139,7 +153,7 @@ export default function Home() {
                 </td>
                 <td className="p-4 border-b border-blue-gray-50">
                   <p className="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
-                    {item.date_used}
+                    {formatDate(item.date_used)}
                   </p>
                 </td>
                 <td className="p-4 border-b border-blue-gray-50">
@@ -164,19 +178,29 @@ export default function Home() {
             of 10000 entries
           </div>
           <div className="flex space-x-1">
-            <button onClick={handlePrevPage} className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
+            <button
+              onClick={handlePrevPage}
+              className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease"
+            >
               Prev
             </button>
-            {page - 1 > 0 && <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
-              {page - 1}
-            </button>}
+            {page - 1 > 0 && (
+              <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
+                {page - 1}
+              </button>
+            )}
             <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-white bg-slate-800 border border-slate-800 rounded hover:bg-slate-600 hover:border-slate-600 transition duration-200 ease">
               {page}
             </button>
-            {page + 1 < 1000 && <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
-              {page + 1}
-            </button>}
-            <button onClick={handleNextPage} className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
+            {page + 1 < 1000 && (
+              <button className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease">
+                {page + 1}
+              </button>
+            )}
+            <button
+              onClick={handleNextPage}
+              className="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease"
+            >
               Next
             </button>
           </div>
