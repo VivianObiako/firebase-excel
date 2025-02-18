@@ -11,9 +11,12 @@ import {
 } from "firebase/firestore";
 import { useState, useEffect } from "react";
 import { database } from "../firebase.js";
+import * as XLSX from "xlsx";
 
 export default function Home() {
   const [data, setData] = useState(null);
+  const [allData, setAllData] = useState([]);
+  const [allDataLength, setAllDataLength] = useState(0);
   const [loading, setLoading] = useState(true);
   const [lastDoc, setLastDoc] = useState(null);
   const [firstDoc, setFirstDoc] = useState(null);
@@ -70,11 +73,69 @@ export default function Home() {
     fetchData("prev");
   };
 
+  const exportToExcel = async () => {
+    let dataRef = collection(database, "otpcodes");
+    let lastVisible = null;
+    let allFetchedData = [];
+    const pageSize = 100; // Adjust the page size as needed
+    setLoading(true);
+  
+    while (true) {
+      let q;
+      q = query(dataRef, orderBy("otp"), startAfter(true), limit(pageSize));
+  
+      const snapshot = await getDocs(q);
+      const fetchedData = snapshot.docs.map((doc) => doc.data());
+      allFetchedData = allFetchedData.concat(fetchedData);
+      setAllDataLength(allFetchedData.length);
+  
+      if (snapshot.docs.length < pageSize) {
+        break;
+      }
+  
+      if (allFetchedData.length > 99999) {
+        break;
+      }
+    }
+  
+    setAllData(allFetchedData);
+    setLoading(false);
+    downloadExcel(allFetchedData);
+  };
+  
+  const downloadExcel = (data) => {
+    // Ensure data is not null or undefined
+    if (!data || data.length === 0) {
+      console.error("No data fetched or data is null");
+      return;
+    }
+  
+    // Create a new array with the desired column order
+    const orderedData = data.map(item => ({
+      otp: item.otp,
+      used_unused: item.used_unused,
+      date_used: item.date_used.toString(),
+    }));
+  
+    const worksheet = XLSX.utils.json_to_sheet(orderedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "OTPCodes");
+    XLSX.writeFile(workbook, "OTPCodes.xlsx");
+  };
+
   return (
     <div className="grid items-center justify-items-center p-8 pb-20 gap-4 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <div className="flex justify-between items-center w-full">
         <h1 className="font-bold">TOUR GUIDING OTP CODES</h1>
-        <div className="ml-3">
+        <div className="ml-3 flex justify-between items-center gap-2">
+          <button
+            disabled={loading}
+            onClick={exportToExcel}
+            style={{ width: "-webkit-fill-available"}}
+            className="px-3 py-1 h-10 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease"
+          >
+            {(loading && allDataLength > 0) ? `Exporting ${allDataLength}...` : "Export to Excel"}
+          </button>
           <div className="w-full max-w-sm min-w-[200px] relative">
             <div className="relative">
               <input
