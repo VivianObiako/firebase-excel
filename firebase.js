@@ -13,14 +13,13 @@ const firebaseConfig = {
   };
 
 // const firebaseConfig = {
-//   apiKey: "AIzaSyAn5aMoN0c1X_6zUA5Hhhri-SOseLaYtkU",
-//   authDomain: "hula-map.firebaseapp.com",
-//   databaseURL: "https://hula-map-default-rtdb.firebaseio.com",
-//   projectId: "hula-map",
-//   storageBucket: "hula-map.firebasestorage.app",
-//   messagingSenderId: "749577821058",
-//   appId: "1:749577821058:web:bd789b79cecb5d992f4d9b",
-//   measurementId: "G-BZ42GE0K6T"
+//   apiKey: "AIzaSyA2e3X-7wbT7lGgnsK4nB_SYzflaAwGAac",
+//   authDomain: "fula-exel.firebaseapp.com",
+//   projectId: "fula-exel",
+//   storageBucket: "fula-exel.firebasestorage.app",
+//   messagingSenderId: "284016240885",
+//   appId: "1:284016240885:web:8f656389b285532eb4bdbc",
+//   measurementId: "G-DE8K066LW1"
 // };
 
 const app = initializeApp(firebaseConfig);

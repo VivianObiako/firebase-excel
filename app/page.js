@@ -93,7 +93,7 @@ export default function Home() {
         break;
       }
   
-      if (allFetchedData.length > 99999) {
+      if (allFetchedData.length > 9999) {
         break;
       }
     }
@@ -114,7 +114,7 @@ export default function Home() {
     const orderedData = data.map(item => ({
       otp: item.otp,
       used_unused: item.used_unused,
-      date_used: item.date_used.toString(),
+      date_used: item.used_unused === 'Used' ? formatDate(item.date_used) : '',
     }));
   
     const worksheet = XLSX.utils.json_to_sheet(orderedData);
